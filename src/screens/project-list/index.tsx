@@ -14,7 +14,7 @@ export const ProjectListScreen = () => {
   })
   const [list, setList] = useState([])
   const [users, setUsers] = useState([])
-  const debouncedParam = useDebounce(param, 2000)
+  const debouncedParam = useDebounce(param, 100)
 
 
   useEffect(() => {
@@ -36,6 +36,6 @@ export const ProjectListScreen = () => {
 
   return <div>
     <SearchPanel users={users} param={param} setParam={setParam}/>
-    <List users={users} list={list} setList={setList}/>
+    <List users={users} list={list}/>
   </div>
 }
