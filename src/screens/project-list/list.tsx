@@ -1,33 +1,55 @@
 import React from 'react'
 import {User} from './search-panel'
+import {Table, TableProps} from 'antd'
+import {Link} from 'react-router-dom'
+import { Pin } from 'components/pin'
+import { useEditProject } from 'utils/project'
 
-interface Project {
-  id: string;
+export interface Project {
+  id: number;
   name: string;
-  personId: string;
+  personId: number;
   organization: string;
+  pin: boolean;
+  created: number;
 }
 
-interface ListProps {
-  list: Project[];
+interface ListProps extends TableProps<Project>{
   users: User[];
 }
 
-export const List = ({list, users}: ListProps) => {
-  return <table>
-    <thead>
-      <tr>
-        <th>名称</th>
-        <th>负责人</th>
-      </tr>
-    </thead>
-    <tbody>
-      {
-        list.map(project => <tr key={project.personId}>
-          <td>{project.name}</td>
-          <td>{users.find(user => user.id === project.personId)?.name || '未知'}</td>
-        </tr>)
+
+
+export const List = ({users, ...props}: ListProps) => {
+  const {mutate} = useEditProject()
+  const pinProject = (id: number) => (pin: boolean) => mutate({id, pin})
+
+  return <Table 
+  pagination={false}
+  rowKey='id'
+  columns={[
+    {
+      title: <Pin checked={true} disabled></Pin>,
+      render(value, project) {
+        return <Pin checked={project.pin} onCheckedChange={pinProject(project.id)}></Pin>
       }
-    </tbody>
-  </table>
+    },
+    {
+      title: '名称',
+      sorter: (a,b) => a.name.localeCompare(b.name),
+      render(value, project) {
+        return <Link to={`/projects/${project.id}`}>{project.name}</Link>
+      }
+    },
+    {
+      title: '负责人',
+      render(_, project) {
+        return users.find(user => user.id === project.personId)?.name || '未知'
+      }
+    }
+  ]}
+  {...props}
+  >
+    
+  </Table>
 }

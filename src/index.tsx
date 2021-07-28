@@ -1,13 +1,19 @@
+import './wdyr'
 import React from "react";
 import ReactDOM from "react-dom";
 import "./index.css";
-import App from "./App";
 import reportWebVitals from "./reportWebVitals";
-import { loadDevTools } from 'jira-dev-tool'
+import App from "./App";
+import { loadServer, DevTools } from 'jira-dev-tool'
+import 'antd/dist/antd.less'
+import { AuthProviders } from 'context'
 
-loadDevTools(() => ReactDOM.render(
+loadServer(() => ReactDOM.render(
   <React.StrictMode>
-    <App />
+    <AuthProviders>
+      <DevTools/>
+      <App />
+    </AuthProviders>
   </React.StrictMode>,
   document.getElementById("root")
 ));
