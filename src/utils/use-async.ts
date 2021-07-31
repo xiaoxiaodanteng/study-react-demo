@@ -45,20 +45,30 @@ export const useAsync = <D>(initialState?: State<D>, initialConfig?: typeof defa
     [],
   );
 
-  const [retry, setRetry] = useState(() => {});
 
   const mountedRef = useMountedRef()
 
-  const run = (promise: Promise<D>) => {
-    if (!promise || !promise.then) throw new Error('请传入Promise数据类型');
-    setState({ ...state, stat: 'loading' });
+  const [retry, setRetry] = useState(() => () => {})
 
-    setRetry(() => run(promise));
+  const run = (promise: Promise<D>, runConfig?: {retry: () => Promise<D>}) => {
+    if (!promise || !promise.then) throw new Error('请传入Promise数据类型')
+    setState({...state, stat: 'loading'})
 
+    setRetry(() => () => {
+      if (runConfig?.retry) {
+        run(runConfig?.retry(), runConfig)
+      }
+    })
+    
     return promise
-      .then((data) => {
+      .then(data => {
         if (mountedRef.current) setData(data)
-        return data;
+        return data
+      })
+      .catch(error => {
+        setError(error)
+        if (config.throwOnError) return Promise.reject(error)
+        return error
       })
       .catch((error) => {
         setError(error);
