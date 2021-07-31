@@ -1,5 +1,5 @@
-import { useState } from "react"
-
+import { useState, useCallback } from 'react';
+import {useMountedRef} from 'utils'
 
 interface State<D>{
   error: Error | null;
@@ -10,59 +10,62 @@ interface State<D>{
 const defaultInitialState: State<null> = {
   stat: 'idle',
   error: null,
-  data: null
-}
+  data: null,
+};
 
 const defaultConfig = {
-  throwOnError: false
-}
+  throwOnError: false,
+};
 
 export const useAsync = <D>(initialState?: State<D>, initialConfig?: typeof defaultConfig) => {
   const config = {
     ...defaultConfig,
-    ...initialConfig
-  }
+    ...initialConfig,
+  };
   const [state, setState] = useState({
     ...defaultInitialState,
-    ...initialState
-  })
+    ...initialState,
+  });
 
-  const setData = (data: D) => setState({
-    data,
-    stat: 'success',
-    error: null,
-  })
+  const setData = useCallback(
+    (data: D) => setState({
+      data,
+      stat: 'success',
+      error: null,
+    }),
+    [],
+  );
 
-  const setError = (error: Error) => setState({
-    error,
-    data: null,
-    stat: 'error'
-  })
+  const setError = useCallback(
+    (error: Error) => setState({
+      error,
+      data: null,
+      stat: 'error',
+    }),
+    [],
+  );
 
-  const [retry, setRetry] = useState(() => {})
+  const [retry, setRetry] = useState(() => {});
+
+  const mountedRef = useMountedRef()
 
   const run = (promise: Promise<D>) => {
-    if (!promise || !promise.then) throw new Error('请传入Promise数据类型')
-    setState({...state, stat: 'loading'})
+    if (!promise || !promise.then) throw new Error('请传入Promise数据类型');
+    setState({ ...state, stat: 'loading' });
 
-    setRetry(() => run(promise))
-    
+    setRetry(() => run(promise));
+
     return promise
-      .then(data => {
-        setData(data)
-        return data
+      .then((data) => {
+        if (mountedRef.current) setData(data)
+        return data;
       })
-      .catch(error => {
-        setError(error)
-        if (config.throwOnError) return Promise.reject(error)
-        return error
-      })
-  }
-
-
-  // const retry = () => {
-  //   run(oldPromise)
-  // }
+      .catch((error) => {
+        setError(error);
+        if (config.throwOnError) return Promise.reject(error);
+        return error;
+      });
+  };
 
   return {
     isIdle: state.stat === 'idle',
@@ -73,6 +76,6 @@ export const useAsync = <D>(initialState?: State<D>, initialConfig?: typeof defa
     setData,
     setError,
     retry,
-    ...state
-  }
-}
+    ...state,
+  };
+};

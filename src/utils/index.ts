@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from "react";
-export const isFalsy = (value: unknown): boolean => (value === 0 ? false : !value);
-export const isVoid = (value: unknown) => value === undefined || value === null || value === ''
+import { useEffect, useRef, useState } from 'react';
 
-export const cleanObject = (object: {[key: string]: unknown}) => {
+export const isFalsy = (value: unknown): boolean => (value === 0 ? false : !value);
+export const isVoid = (value: unknown): boolean => value === undefined || value === null || value === '';
+
+export const cleanObject = (object: {[key: string]: unknown}): {[key: string]: unknown} => {
   const result = { ...object };
   Object.keys(object).forEach((key) => {
     const value = result[key];
@@ -32,18 +33,32 @@ export const useDebounce = <T>(value: T, delay?: number): T => {
   return debouncedValue;
 };
 
-export const useDocumentTitle = (title: string, keepOnUnMount: boolean = true) => {
-
+export const useDocumentTitle = (title: string, keepOnUnMount = true): void => {
   // const oldTitle = document.title
-  const oldTitle = useRef(document.title).current
+  const oldTitle = useRef(document.title).current;
 
   useEffect(() => {
-    document.title = title
+    document.title = title;
   }, [title]);
 
+  useEffect(() => () => {
+    if (!keepOnUnMount) document.title = oldTitle;
+  }, [keepOnUnMount, oldTitle]);
+};
+
+
+/**
+ * 用于返回组件的挂载状态，如果还没挂载或者已经卸载，返回false, 反之，返回true
+ * */
+export const useMountedRef = () => {
+  const mountedRef = useRef(false)
+
   useEffect(() => {
+    mountedRef.current = true
     return () => {
-      if (!keepOnUnMount) document.title = oldTitle
+      mountedRef.current = false
     }
-  }, [keepOnUnMount, oldTitle])
+  })
+
+  return mountedRef
 }
